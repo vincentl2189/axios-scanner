@@ -51,7 +51,7 @@ function Info($msg) {
 
 Banner
 
-# ── Load IOC data (web first, local fallback) ────────────────
+# -- Load IOC data (web first, local fallback) ----------------
 Write-Host "Fetching latest IOC data..." -ForegroundColor White
 
 $ioc = $null
@@ -83,7 +83,7 @@ $ldPy      = $ioc.ld_py
 $actMond   = $ioc.act_mond
 $axBadVers = $ioc.ax_bad
 
-# ── 1. Malicious files dropped by the RAT ───────────────────
+# -- 1. Malicious files dropped by the RAT -------------------
 
 Write-Host ""
 Write-Host "1. Checking for malicious files on disk..." -ForegroundColor White
@@ -105,14 +105,14 @@ foreach ($loc in $VbsLocations) {
     $hits = Get-ChildItem -Path $loc -ErrorAction SilentlyContinue
     if ($hits) {
         if ($hits -is [System.Array]) {
-            Warn "Found VBScript files at $loc — review manually: $($hits | Select-Object -ExpandProperty FullName -Unique -join ', ')"
+            Warn "Found VBScript files at $loc - review manually: $($hits | Select-Object -ExpandProperty FullName -Unique -join ', ')"
         } else {
-            Warn "Found VBScript file at $loc — review manually: $($hits.FullName)"
+            Warn "Found VBScript file at $loc - review manually: $($hits.FullName)"
         }
     }
 }
 
-# ── 2. npm package checks ───────────────────────────────────
+# -- 2. npm package checks -----------------------------------
 
 Write-Host ""
 Write-Host "2. Checking npm packages..." -ForegroundColor White
@@ -165,7 +165,7 @@ if (Test-Path "package.json") {
     }
 }
 
-# ── 3. Package manager cache scans ──────────────────────────
+# -- 3. Package manager cache scans --------------------------
 
 Write-Host ""
 Write-Host "3. Scanning package manager caches (npm, yarn, pnpm, pip)..." -ForegroundColor White
@@ -180,7 +180,7 @@ try {
         foreach ($badVer in $axBadVers) { $cachePatterns += "axios-$badVer*" }
         foreach ($pattern in $cachePatterns) {
             $hits = Get-ChildItem -Path $npmCache -Recurse -Filter $pattern -ErrorAction SilentlyContinue
-            if ($hits) { Warn "npm cache contains '$pattern' — package was downloaded at some point" }
+            if ($hits) { Warn "npm cache contains '$pattern' - package was downloaded at some point" }
         }
         Ok "npm cache scan complete"
     }
@@ -193,11 +193,11 @@ try {
         Info "yarn cache: $yarnCache"
         foreach ($badVer in $axBadVers) {
             $hits = Get-ChildItem -Path $yarnCache -Recurse -Filter "*axios*$badVer*" -ErrorAction SilentlyContinue
-            if ($hits) { Warn "yarn cache contains 'axios-$badVer' — package was downloaded" }
+            if ($hits) { Warn "yarn cache contains 'axios-$badVer' - package was downloaded" }
         }
         if ($pcjsPkg) {
             $hits = Get-ChildItem -Path $yarnCache -Recurse -Filter "$pcjsPkg*" -ErrorAction SilentlyContinue
-            if ($hits) { Warn "yarn cache contains '$pcjsPkg' — package was downloaded" }
+            if ($hits) { Warn "yarn cache contains '$pcjsPkg' - package was downloaded" }
         }
         Ok "yarn cache scan complete"
     }
@@ -210,11 +210,11 @@ try {
         Info "pnpm store: $pnpmStore"
         foreach ($badVer in $axBadVers) {
             $hits = Get-ChildItem -Path $pnpmStore -Recurse -Filter "*axios*$badVer*" -ErrorAction SilentlyContinue
-            if ($hits) { Warn "pnpm store contains 'axios@$badVer' — package was downloaded" }
+            if ($hits) { Warn "pnpm store contains 'axios@$badVer' - package was downloaded" }
         }
         if ($pcjsPkg) {
             $hits = Get-ChildItem -Path $pnpmStore -Recurse -Filter "$pcjsPkg*" -ErrorAction SilentlyContinue
-            if ($hits) { Warn "pnpm store contains '$pcjsPkg' — package was downloaded" }
+            if ($hits) { Warn "pnpm store contains '$pcjsPkg' - package was downloaded" }
         }
         Ok "pnpm store scan complete"
     }
@@ -226,12 +226,12 @@ try {
     if ($pipCacheDir -and (Test-Path $pipCacheDir)) {
         Info "pip cache: $pipCacheDir"
         $hits = Get-ChildItem -Path $pipCacheDir -Recurse -Filter "litellm*" -ErrorAction SilentlyContinue
-        if ($hits) { Warn "pip cache contains litellm package(s) — review for compromised version" }
+        if ($hits) { Warn "pip cache contains litellm package(s) - review for compromised version" }
         Ok "pip cache scan complete"
     }
 } catch {}
 
-# ── 4. Network: active C2 connections ───────────────────────
+# -- 4. Network: active C2 connections -----------------------
 
 Write-Host ""
 Write-Host "4. Checking for active C2 connections ($($c2Domain):$c2Port)..." -ForegroundColor White
@@ -246,7 +246,7 @@ if ($activeConns) {
 
 $dnsCache = Get-DnsClientCache -ErrorAction SilentlyContinue | Where-Object { $_.Entry -like "*$c2Domain*" }
 if ($dnsCache) {
-    Flag "DNS cache contains $c2Domain — this machine may have contacted the C2 server"
+    Flag "DNS cache contains $c2Domain - this machine may have contacted the C2 server"
 } else {
     Ok "$c2Domain not found in DNS cache"
 }
@@ -259,7 +259,7 @@ if ($c2Events) {
     Flag "Firewall logs reference $c2Domain"
 }
 
-# ── 5. Suspicious processes ─────────────────────────────────
+# -- 5. Suspicious processes ---------------------------------
 
 Write-Host ""
 Write-Host "5. Checking for suspicious processes..." -ForegroundColor White
@@ -289,7 +289,7 @@ try {
             try {
                 $wtPath = $wtProc.MainModule.FileName
                 if ($wtPath -like "*ProgramData*") {
-                    Flag "$wtBin running from ProgramData — this matches the RAT payload path ($wtPath)"
+                    Flag "$wtBin running from ProgramData - this matches the RAT payload path ($wtPath)"
                 }
             } catch {}
         }
@@ -297,7 +297,7 @@ try {
 } catch {}
 Ok "No known malicious processes found"
 
-# ── 6. Scheduled tasks & autoruns (persistence) ─────────────
+# -- 6. Scheduled tasks & autoruns (persistence) -------------
 
 Write-Host ""
 Write-Host "6. Checking for persistence mechanisms..." -ForegroundColor White
@@ -342,7 +342,7 @@ foreach ($regPath in $regPaths) {
 }
 Ok "No suspicious startup registry entries found"
 
-# ── 7. Lock file audit ──────────────────────────────────────
+# -- 7. Lock file audit --------------------------------------
 
 Write-Host ""
 Write-Host "7. Scanning lock files in current directory..." -ForegroundColor White
@@ -366,7 +366,7 @@ foreach ($lockfile in @("package-lock.json", "yarn.lock", "pnpm-lock.yaml")) {
     }
 }
 
-# ── 8. pip / LiteLLM check ──────────────────────────────────
+# -- 8. pip / LiteLLM check ----------------------------------
 
 Write-Host ""
 Write-Host "8. Checking LiteLLM (Python) installation..." -ForegroundColor White
@@ -392,7 +392,7 @@ try {
     Ok "pip not found or LiteLLM not installed"
 }
 
-# ── Summary ─────────────────────────────────────────────────
+# -- Summary -------------------------------------------------
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
@@ -417,3 +417,4 @@ if ($script:FOUND) {
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 Read-Host "Press Enter to close"
+
